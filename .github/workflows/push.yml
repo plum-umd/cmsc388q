@@ -16,5 +16,5 @@ jobs:
     - name: Build and test
       run: |
         raco make www/main.scrbl
-	raco test .
+        raco test .
         make -C www
