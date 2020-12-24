@@ -1,0 +1,20 @@
+on:
+  - push
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@main
+    - name: Install Racket
+      uses: Bogdanp/setup-racket@v0.10
+      with:
+        architecture: 'x64'
+        distribution: 'full'
+        version: '7.9'
+    - name: Build and test
+      run: |
+        raco make www/main.scrbl
+	raco test .
+        make -C www

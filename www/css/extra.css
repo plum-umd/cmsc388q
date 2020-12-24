@@ -1,0 +1,73 @@
+
+.boxedtable {
+
+    background-color: inherit;
+    border-collapse:collapse;
+}
+
+.boxedtable td {
+    border: 1px solid black;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.version {
+visibility:hidden;
+}
+
+.strike {
+    text-decoration: line-through;
+}
+
+.accessibility-link {
+   float: right;
+}
+
+.tocset td a.tocviewselflink {
+   color: black;
+   text-decoration: underline;
+}
+
+.CircleImageStyle {
+    float: right;
+    border-radius: 100%;
+    width: 120px;
+    height: 120px;    
+    /* background-color: lightgray; */
+    animation: floating 2s infinite ease-in-out;   
+}
+
+@keyframes floating {
+    50%{
+	transform:  translateY(-8px);
+    }
+    
+}
+
+.ExerciseBody {
+  padding: 0px 0px 0.5em 10px;
+  border-left-style: solid;
+  border-width: 5px;
+  border-color: orange;
+  background-color: #ffebcd;
+}
+
+.Exercise {
+   font-weight: bold;
+   background-color: #ffb167;
+   padding: 5px 0px 5px 10px;
+   margin-left: -10px;
+}
+
+.tocset {
+    background-color: rgb(167, 212, 195);
+}
+
+a, .toclink, .toptoclink, .tocviewlink, .tocviewselflink, .tocviewtoggle, .plainlink, 
+.techinside, .techoutside:hover, .techinside:hover {
+    color: rgb(105, 149, 134);
+}
+
+.boxed {
+    background: linear-gradient(to top, hsl(0, 0%, 99%) 0%, rgb(167, 212, 195) 100%);
+}
