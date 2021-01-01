@@ -19,5 +19,6 @@ pull-request to the
 
 @include-section["notes/approach.scrbl"]
 @include-section["notes/resources.scrbl"]
+@include-section["notes/getting-started.scrbl"]
 
 
