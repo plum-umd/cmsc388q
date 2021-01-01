@@ -1,2 +1,2 @@
-# cmsc388q
-Coure material for CMSC 388Q
+# CMSC 388Q
+Course material for CMSC 388Q
