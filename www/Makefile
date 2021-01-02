@@ -1,6 +1,6 @@
 course = main
 
-.PHONY : all clean test
+.PHONY : all clean test push
 
 all: clean $(course)
 
@@ -15,6 +15,9 @@ $(course):
 		++xref-in setup/xref load-collections-xref \
 		--redirect-main http://docs.racket-lang.org/ \
 		$(course).scrbl
+
+push:
+	rsync -avr --delete main/ junkfood.cs.umd.edu:/fs/www/class/winter2021/cmsc388Q/
 
 clean:
 	rm -rf $(course)
