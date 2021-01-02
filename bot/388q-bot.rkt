@@ -29,7 +29,8 @@ HERE
                     (user-id (client-user client)))
     (cond
       [(mentions-me? message client)
-       (respond (format "Hi <@~a>, I'm the 388Q Bot.\n~a"
+       (respond client message
+                (format "Hi <@~a>, I'm the 388Q Bot.\n~a"
                         (user-id (message-author message))
                         USAGE))]
       
