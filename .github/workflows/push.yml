@@ -14,6 +14,7 @@ jobs:
         architecture: 'x64'
         distribution: 'full'
         version: '7.9'
+        packages: 'racket-cord'
     - name: Build and test
       run: |
         raco make www/main.scrbl
