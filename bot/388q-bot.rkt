@@ -29,11 +29,9 @@ HERE
                     (user-id (client-user client)))
     (cond
       [(mentions-me? message client)
-       (respond client message
-                (format "Hi <@~a>, I'm the 388Q Bot.\n~a"
-                        (user-id (message-author message))
-                        USAGE))]
-      
+       (http:create-message client
+                       (message-channel-id message)
+                       "" #:embed (about-me message))]
       [(string-prefix? (message-content message) "!eval ")
        (repl (λ (c) (respond client message c))
              (string-trim (message-content message)  "!eval " #:right? #f))]
@@ -41,6 +39,17 @@ HERE
        (respond client message
                 (string-trim (message-content message) "!echo " #:right? #f))])))
 
+(define self-portrait
+  "https://media.discordapp.net/attachments/786607936595296260/795416546775269416/PXL_20201231_174106169.jpg")
+
+;; Construct an embed object for "about me" message
+(define (about-me message)
+  `#hash((thumbnail . #hash((url . ,self-portrait)))
+         (color . #x95B5E3)
+         (description .
+                      ,(format "Hi <@~a>, I'm the 388Q Bot!\n~a"
+                               (user-id (message-author message))
+                               USAGE))))
 
 ;; Make a new evaluator
 (define (init-ev)
