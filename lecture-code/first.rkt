@@ -7,6 +7,13 @@
 
 (require 2htdp/image)
 
+;; Launch a spinning blue spaceship
+(module* main #f
+  (big-bang (cons 0 "white")
+    [on-draw spin]
+    [on-tick add5 1/28]
+    [on-key reset]))
+
 (+ 1 2)
 
 (string-append "fred" "wilma")
@@ -17,7 +24,8 @@
   (expt 2 y))
 
 
-(define spaceship (bitmap/url "https://www.cs.umd.edu/class/winter2021/cmsc388Q/shipBlue_manned.png"))
+(define spaceship
+  (bitmap/url "https://www.cs.umd.edu/class/winter2021/cmsc388Q/shipBlue_manned.png"))
 
 
 (overlay (scale .7 spaceship)
@@ -44,18 +52,3 @@
 (define (add5 x)
   (cons (+ (car x) 5)
         (cdr x)))
-
-(big-bang (cons 0 "white")
-  [on-draw spin]
-  [on-tick add5 1/28]
-  [on-key reset])
-
-
-
-
-
-
-
-
-
-  
