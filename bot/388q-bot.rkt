@@ -53,7 +53,7 @@ HERE
 
 ;; Make a new evaluator
 (define (init-ev)
-  (make-evaluator '(begin)))
+  (make-evaluator '(begin) #:requires '(2htdp/image)))
 
 ;; The evaluator
 (define ev (init-ev))
