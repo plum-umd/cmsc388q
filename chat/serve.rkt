@@ -10,12 +10,13 @@
 ;;
 ;;   racket serve.rkt
 
-(universe '()
- [on-new (λ (u iw) (cons iw u))]
- [on-msg (λ (u iw msg)
-           (make-bundle u
-                        (filter-map (λ (iw-to)
-                                      (and (not (iworld=? iw-to iw))
-                                           (make-mail iw-to msg)))
-                                    u)
-                        '()))])
+(module* main #f
+  (universe '()
+    [on-new (λ (u iw) (cons iw u))]
+    [on-msg (λ (u iw msg)
+              (make-bundle u
+                           (filter-map (λ (iw-to)
+                                         (and (not (iworld=? iw-to iw))
+                                              (make-mail iw-to msg)))
+                                       u)
+                           '()))]))
