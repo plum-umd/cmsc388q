@@ -21,8 +21,7 @@
 
 (provide start-chat)
 (require 2htdp/image
-         2htdp/universe
-         racket/cmdline)
+         2htdp/universe)
 
 (module+ test (require rackunit))
 
