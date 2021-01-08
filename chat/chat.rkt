@@ -1,8 +1,4 @@
 #lang racket/base
-(require "client.rkt"
-         racket/cmdline
-         2htdp/universe)
-
 ;; Command line interface for starting the chat client
 
 ;; From the command line, run:
@@ -31,14 +27,16 @@
 
 ;; Start a chat client based on command line arguments
 
-(module* main #f
-  (let ((user #f) (srvr #f))
-    (command-line
-     #:program "chat"
-     #:once-any
-     [("-u" "--user")   u "Chat user name"  (set! user u)]
-     #:once-any
-     [("-s" "--server") s "Server location" (set! srvr s)]
+(module+ main
+  (require "client.rkt" 2htdp/universe racket/cmdline)
+  (define user #f)
+  (define srvr #f)
+  (command-line
+   #:program "chat"
+   #:once-any
+   [("-u" "--user")   u "Chat user name"  (set! user u)]
+   #:once-any
+   [("-s" "--server") s "Server location" (set! srvr s)]
      #:args ()
      (start-chat (or user (getenv "USER") "me")
-                 (or srvr LOCALHOST)))))
+                 (or srvr LOCALHOST))))
