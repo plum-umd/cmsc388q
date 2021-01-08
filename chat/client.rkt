@@ -130,8 +130,17 @@
 
 
 (module+ test
+  (check-equal? (chat-recv (chat "DVH" line0 '()) (list (entry "Bob" "Hi")))
+                (chat "DVH" line0 (list (entry "Bob" "Hi"))))
   (check-equal? (chat-recv (chat "DVH" line0 '()) (entry "Bob" "Hi"))
-                (chat "DVH" line0 (list (entry "Bob" "Hi")))))
+                ; single entries are not expected and ignored
+                (chat "DVH" line0 '()))
+  (check-equal? (chat-recv (chat "DVH" line0 '()) (list (entry 9 "Hi")))
+                ; bad entries are not expected and ignored
+                (chat "DVH" line0 '()))
+  (check-equal? (chat-recv (chat "DVH" line0 '()) 'junk)
+                ; junk
+                (chat "DVH" line0 '())))
 
 ;; Chat (Listof Entry) -> Chat
 ;; Receive a message from the server
