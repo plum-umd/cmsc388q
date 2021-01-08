@@ -85,7 +85,11 @@
   (check-equal? (chat-press (chat "DVH" line0 '()) "f1")
                 (chat "DVH" line0 '())))
 
-;; Chat KeyEvent -> Chat
+;; type ChatPackage =
+;; | Chat
+;; | (make-package Chat Entry)
+
+;; Chat KeyEvent -> ChatPackage
 ;; Press a key in given chat
 (define (chat-press c ke)
   (match c
@@ -109,7 +113,7 @@
                                           (entry "388Q" "sup")))
                               (entry "DVH" "abc"))))
 
-;; Chat -> Package
+;; Chat -> ChatPackage
 ;; Commit current line to entries and start new line
 (define (newline c)
   (match c
@@ -129,23 +133,37 @@
   (check-equal? (chat-recv (chat "DVH" line0 '()) (entry "Bob" "Hi"))
                 (chat "DVH" line0 (list (entry "Bob" "Hi")))))
 
-;; Chat Entry -> Chat
+;; Chat (Listof Entry) -> Chat
 ;; Receive a message from the server
 (define (chat-recv c msg)
-  (match c
-    [(chat user line entries)
-     (chat user line (cons msg entries))]))
+  (if (good-message? msg)
+      (match c
+        [(chat user line entries)
+         (chat user line (append msg entries))])
+      ;; server sent us bad data
+      c))
+
+
+(define (good-message? msg)
+  (and (list? msg)
+       (andmap (λ (e)
+                 (match e
+                   [(entry (? string?) (? string?)) #t]
+                   [_ #f]))
+               msg)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Visualize a Chat
 
+;; Chat -> Image
 (define (chat-scene c)
   (place-image/align (chat-draw c)
                      0 HEIGHT
                      "left" "bottom"
                      (empty-scene WIDTH HEIGHT)))
 
+;; Chat -> Image
 (define (chat-draw c)
   (match c
     [(chat user line entries)
@@ -153,6 +171,7 @@
                   (draw-entries entries)
                   (draw-line line))]))
 
+;; (Listof Entry) -> Image
 (define (draw-entries es)
   (match es
     ['() empty-image]
@@ -161,12 +180,14 @@
                   (draw-entries es)
                   (draw-entry e))]))
 
+;; Entry -> Image
 (define (draw-entry e)
   (match e
     [(entry user str)
      (beside (text (string-append user "> ") TEXT-SIZE USER-COLOR)
              (text str TEXT-SIZE MSG-COLOR))]))
 
+;; Line -> Image
 (define (draw-line l)
   (match l
     [(line str i)
