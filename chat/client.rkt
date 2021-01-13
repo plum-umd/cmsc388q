@@ -131,12 +131,52 @@
   (match c
     [(chat user (line str i) entries)
    	
-     (if (and (> (string-length str) 6) (equal? "/nick " (substring str 0 6)))	
-
-     	(make-package (chat user (line "" 0) entries) (crpc "nick" (substring str 6) "" ""))
+     (if (and (> (string-length str) 0) (equal? "/" (substring str 0 1)))	
+	(handle_cmd c)
      	(make-package (chat user (line "" 0) entries) (crpc "send" user "" str))
      )
+
      ]))
+
+(define (regex-call str rexp f) 
+	(let ([m (regexp-match rexp str)])
+	     (if (equal? m #f)
+		 #f
+		 (f m)
+	     )
+	)
+)
+
+(define (regex-loop str pair-list) 
+	(if (null? pair-list)
+		#f
+		(let ([res (regex-call str (car (car pair-list)) (cdr (car pair-list))  )])
+			(if (equal? res #f)
+				(regex-loop str (cdr pair-list))
+				res	
+			)
+		)
+	)
+)
+
+(define (handle_cmd c)
+	( match c [(chat user (line str i) entries) 
+	(let
+		([res 
+			(regex-loop (line-str (chat-line c)) 
+			(list 
+				(cons
+					 #rx"^/nick (.+)$" 
+					(lambda (lst) (make-package (chat user (line "" 0) entries) (crpc "nick" (car (cdr lst)) "" "")) )
+				)
+			))
+		])
+		(if (equal? res #f)
+		    c
+		    res
+		) 
+	)])
+)
        
 ;; String -> Boolean
 (define (1string? s)
