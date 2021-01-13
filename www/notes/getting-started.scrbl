@@ -1,5 +1,6 @@
 #lang scribble/manual
 @(require "../utils.rkt")
+
 @title[#:style '(toc unnumbered)]{Getting Started}
 
 To get started with Racket, you should download and install
