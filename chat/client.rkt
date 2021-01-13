@@ -34,8 +34,17 @@
   (big-bang (chat user (line "" 0) '())
     [on-key     chat-press]
     [to-draw    chat-scene]
-    [on-receive chat-recv]
+    [on-receive chat-recv-facade]
     [register   srvr]))
+
+
+
+;; type char-rpc
+(struct crpc (cmd from channel msg) #:prefab)
+
+(define (chat-recv-facade c msg)
+	(chat-recv c (entry (string-append (crpc-from msg) "@" (crpc-channel msg)) (crpc-msg msg)) )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Types
@@ -113,16 +122,21 @@
                                           (entry "388Q" "sup")))
                               (entry "DVH" "abc"))))
 
+
+
+
 ;; Chat -> ChatPackage
 ;; Commit current line to entries and start new line
 (define (newline c)
   (match c
     [(chat user (line str i) entries)
-     (make-package 
-      (chat user
-            (line "" 0)
-            (cons (entry user str) entries))
-      (entry user str))]))
+   	
+     (if (and (> (string-length str) 6) (equal? "/nick " (substring str 0 6)))	
+
+     	(make-package (chat user (line "" 0) entries) (crpc "nick" (substring str 6) "" ""))
+     	(make-package (chat user (line "" 0) entries) (crpc "send" user "" str))
+     )
+     ]))
        
 ;; String -> Boolean
 (define (1string? s)
@@ -142,25 +156,28 @@
                 ; junk
                 (chat "DVH" line0 '())))
 
+
+
 ;; Chat (Listof Entry) -> Chat
 ;; Receive a message from the server
 (define (chat-recv c msg)
   (if (good-message? msg)
       (match c
         [(chat user line entries)
-         (chat user line (append msg entries))])
+         (chat user line (append (list msg) entries))])
       ;; server sent us bad data
       c))
 
 
-(define (good-message? msg)
-  (and (list? msg)
-       (andmap (λ (e)
-                 (match e
-                   [(entry (? string?) (? string?)) #t]
-                   [_ #f]))
-               msg)))
+;(define (good-message? msg)
+;  (and (list? msg)
+;       (andmap (λ (e)
+;                 (match e
+;                   [(entry (? string?) (? string?)) #t]
+;                   [_ #f]))
+;               msg)))
 
+(define (good-message? msg) #t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Visualize a Chat
