@@ -11,7 +11,7 @@
 ;;   racket serve.rkt
 
 (module+ main
-  (universe (cs (make-hash '()) (make-hash '()) )
+  (universe (cs (make-isom) (make-hash '()) )
    [on-new new-chat-client]
     [on-msg recv-msg]))
 
@@ -35,9 +35,32 @@
   	(make-bundle u (list (make-mail iw (crpc "send" "" "" "Welcome to the server")))  '() )
 )
 
+;; Isomorphisms - used to store one-to-one data
+(struct isom (dom codom))
+(define (make-isom) (isom 
+			(make-hash '()) 
+		    	(make-hash '())
+		     )
+)
+
+(define (isom-set! i d c)
+	(if (hash-has-key? (isom-dom i) d)
+	    (hash-remove! (isom-codom i) (hash-ref (isom-dom i) d))
+	    (void))
+
+	(hash-set! (isom-dom i) d c)
+	(hash-set! (isom-codom i) c d)
+)
 
 
+(define (isom-ref i d) (hash-ref (isom-dom i) d))
+(define (isom-ref! i d to-set) (hash-ref! (isom-dom i) d to-set))
 
+
+(define (isom-ref-inv i c) (hash-ref (isom-codom i) c))
+(define (isom-ref-inv! i c to-set) (hash-ref! (isom-codom i) c to-set))
+(define (isom-has-key? i d) (hash-has-key? (isom-dom i) d))
+(define (isom-has-key-inv? i c) (hash-has-key? (isom-codom i) c))
 
 ;; ChatServer IWorld Entry -> ChatServer
 (define (recv-msg u iw msg)
@@ -63,37 +86,44 @@
 ; assumes msg is valid
 ; nick command, the users new nick should be set in the from part of the msg
 (define (handle-nick u iw msg) 
-	(if (or (< (string-length (crpc-from msg)) 1) (equal? "#" (substring (crpc-from msg) 0 1)))
+	(if     (or
+			(< (string-length (crpc-from msg)) 1)
+			(equal? "#" (substring (crpc-from msg) 0 1)) 
+			(isom-has-key-inv? (cs-usr u) (crpc-from msg))
+		)
 	    (error-bundle u iw "Bad nickname")
-	    (let ([_ (hash-set! (cs-usr u) iw (crpc-from msg))]) 
+	    (let ([_ (isom-set! (cs-usr u) iw (crpc-from msg))]) 
 		(make-bundle u (list (make-mail iw (crpc "send" "" "" "Nick registered" ) )) '() )
             )
 	)
 )
 
 
-(define (create-send-list u dest)
+(define (create-send-list u iw dest)
 	(if (non-empty-string? dest)
 	    (if (eq? "#" (substring dest 0 1))
 		;send to channel
 		(hash-ref (cs-chans u) dest (lambda () '()) )
-		;send to user: NOT IMPLEMENTED
-		'()
+		;send to user
+		(if (isom-has-key-inv? (cs-usr u) dest)
+			(list iw (isom-ref-inv (cs-usr u) dest))
+			(list iw)
+		)
 	    )
 	    ;send to global channel
-	    (hash-keys (cs-usr u))
+	    (hash-keys (isom-dom (cs-usr u)))
 	)
 )
 
 (define (handle-send u iw msg) 
 	;check preconditions 
-	(if (hash-has-key? (cs-usr u) iw)
+	(if (isom-has-key? (cs-usr u) iw)
 	    (make-bundle u 
 		
 		( map (lambda (x) 
-		      	(make-mail x (crpc "send" (hash-ref (cs-usr u) iw) (crpc-channel msg) (crpc-msg msg)) )
+		      	(make-mail x (crpc "send" (isom-ref (cs-usr u) iw) (crpc-channel msg) (crpc-msg msg)) )
 		      )
-			(create-send-list u (crpc-channel msg) )
+			(create-send-list u iw (crpc-channel msg) )
 		)
 		 '()
 	    ) 

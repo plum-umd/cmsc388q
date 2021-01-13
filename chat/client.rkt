@@ -169,6 +169,10 @@
 					 #rx"^/nick (.+)$" 
 					(lambda (lst) (make-package (chat user (line "" 0) entries) (crpc "nick" (car (cdr lst)) "" "")) )
 				)
+				(cons	
+					 #rx"^/msg ([^ ]+) (.+)$" 
+					(lambda (lst) (make-package (chat user (line "" 0) entries) (crpc "send" "" (list-ref lst 1) (list-ref lst 2) )) )
+				)
 			))
 		])
 		(if (equal? res #f)
