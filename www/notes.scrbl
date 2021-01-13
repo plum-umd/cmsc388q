@@ -22,6 +22,7 @@ pull-request to the
 @include-section["notes/getting-started.scrbl"]
 @include-section["notes/intro.scrbl"]
 @include-section["notes/ocaml-to-racket.scrbl"]
+@include-section["notes/pictures.scrbl"]
 
 
 
