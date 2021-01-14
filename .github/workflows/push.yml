@@ -23,4 +23,4 @@ jobs:
       run: |
         raco make www/main.scrbl
         xvfb-run raco test .
-        make -C www
+        xvfb-run make -C www
