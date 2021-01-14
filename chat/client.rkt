@@ -24,6 +24,7 @@
          2htdp/universe)
 
 (module+ test (require rackunit))
+(module+ private (provide (all-from-out (submod ".."))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Chat client
