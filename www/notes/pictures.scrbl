@@ -1,6 +1,6 @@
 #lang scribble/manual
 @(require "../utils.rkt")
-
+@(require (for-label 2htdp/image 2htdp/universe))
 
 @(require scribble/examples racket/sandbox)
 @(require 2htdp/image)
@@ -9,7 +9,8 @@
 @(define core-racket
    (make-base-eval
     '(require racket/match)
-    '(require 2htdp/image)))
+    '(require 2htdp/image)
+    '(require racket/math)))
 
 @(define-syntax-rule (ex e ...)
   (filebox (emph "Racket REPL")
@@ -107,3 +108,92 @@ To learn more about what's possible, read the
 @racketmodname[2htdp/image] library. You can right-click any
 identifier provided by the library and select ``view
 documentation'' to see the docs for that function.
+
+Alright, now let's do something a little more animated.
+
+Let's make a function that is given an angle and produces a
+spaceship rotated by that many degrees:
+
+@ex[(define (spin i)
+      (rotate i spaceship))]
+
+We can use it like this:
+
+@ex[(spin 0)
+    (spin 1)
+    (spin 2)
+    (spin 90)
+    (spin 180)]
+
+We could make a big list of images using
+@racket[build-list]. Here is how @racket[build-list] works:
+
+@ex[(build-list 5 add1)
+    (build-list 5 sqr)]
+
+Now:
+
+@ex[(build-list 45 spin)]
+
+Notice how when you were scrolling it might've looked at
+times like the spaceship was moving. An animation, after
+all, is just a collection of still pictures which are shown
+in rapid succession to trick our eyes into seeing movement.
+
+
+There's a related library called
+@racketmodname[2htdp/universe] that provides a function
+called @racket[animate] that does just this: try running
+
+@racketblock[
+ (require 2htdp/universe)
+ (animate spin)
+]
+
+The @racket[animate] function is given a function from
+natural numbers to images and calls the function with 0, 1,
+2, etc. at a rate of 28 times per second, showing the
+results in a new window.
+
+It's a little unfortunate that the animation looks bad
+because as the image rotate, it's dimensions change are
+cropped by the window. We can clean things up by placing the
+spaceship on a larger background image.  Here's a revised
+version of @racket[spin]:
+
+@ex[(define (spin i)
+      (overlay (rotate i spaceship)
+               (empty-scene (* 2 (image-width spaceship))
+                            (* 2 (image-height spaceship)))))
+    (spin 0)
+    (spin 45)
+    (spin 90)]
+
+Now try the animation again.
+
+The @racket[animate] function is actually a simple use of a
+more general system called @racket[big-bang]. To achieve the
+same result, we could have written:
+
+@racketblock[
+ (big-bang 0
+   [on-tick add1 1/28]
+   [to-draw spin])
+ ]
+
+The @racket[big-bang] system generalizes @racket[animate] in
+that you have control over how ``counting'' works. You
+specify where to start and how to go from the current moment
+in time to the next. In fact, you don't even have to count
+with numbers; you can count from an arbitrary value.
+Whatever function you give for the @racket[on-tick] clause
+specifies how to go from the current value to the next
+value. These values are rendered into pictorial form with
+the function given in @racket[to-draw] clause.
+
+Be sure to read the @racket[big-bang] documentation for
+details.
+
+
+
+    
