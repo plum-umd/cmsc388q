@@ -70,6 +70,7 @@
 			match (crpc-cmd msg)
 			["nick" (handle-nick u iw msg)]
 			["send" (handle-send u iw msg)]
+			["join" (handle-join u iw msg)]
 			[_ (error-bundle u iw "Invalid command")]
 		)
 		; invalid command, inform the sender
@@ -101,7 +102,7 @@
 
 (define (create-send-list u iw dest)
 	(if (non-empty-string? dest)
-	    (if (eq? "#" (substring dest 0 1))
+	    (if (equal? "#" (substring dest 0 1))
 		;send to channel
 		(hash-ref (cs-chans u) dest (lambda () '()) )
 		;send to user
@@ -125,9 +126,35 @@
 		      )
 			(create-send-list u iw (crpc-channel msg) )
 		)
-		 '()
+		'()
 	    ) 
 	
 	    (error-bundle u iw "could not send")
+	)
+)
+
+(define (add-unique l e)
+	(if (null? l)
+		(cons e l)
+		(if (equal? (car l) e)
+			(add-unique (cdr l) e)
+			(cons (car l) (add-unique (cdr l) e))
+		)
+	)
+)
+
+(define (handle-join u iw msg)
+	(cond
+	        [(or (<= (string-length (crpc-channel msg)) 1) (not (equal? "#" (substring (crpc-channel msg) 0 1))))
+		 (error-bundle u iw "Could not join that channel")
+		]
+		[else (hash-set! (cs-chans u) (crpc-channel msg)
+			 (add-unique
+			 	(hash-ref (cs-chans u) (crpc-channel msg) (lambda () '()))
+				iw
+			 )
+		) u
+		]
+		
 	)
 )

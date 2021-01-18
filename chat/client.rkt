@@ -85,10 +85,10 @@
                 (chat "DVH" (right line0) '()))
   (check-equal? (chat-press (chat "DVH" line0 '()) "\b")
                 (chat "DVH" (del line0) '()))
-  (check-equal? (chat-press (chat "DVH" line0 '()) "\r")
-                (make-package
-                 (chat "DVH" (line "" 0) (list (entry "DVH" "abc")))
-                 (entry "DVH" "abc")))
+;  (check-equal? (chat-press (chat "DVH" line0 '()) "\r")
+;                (make-package
+;                 (chat "DVH" (line "" 0) (list (entry "DVH" "abc")))
+;                 (entry "DVH" "abc")))
   (check-equal? (chat-press (chat "DVH" line0 '()) "z")
                 (chat "DVH" (ins line0 "z") '()))
   (check-equal? (chat-press (chat "DVH" line0 '()) "f1")
@@ -112,15 +112,15 @@
                     (chat user (ins line ke) entries)
                     c)])]))
 
-(module+ test
-  (check-equal? (newline (chat "DVH" line0 '()))
-                (make-package (chat "DVH" (line "" 0) (list (entry "DVH" "abc")))
-                              (entry "DVH" "abc")))
-  (check-equal? (newline (chat "DVH" line0 (list (entry "388Q" "sup"))))
-                (make-package (chat "DVH" (line "" 0)
-                                    (list (entry "DVH" "abc")
-                                          (entry "388Q" "sup")))
-                              (entry "DVH" "abc"))))
+;(module+ test
+;  (check-equal? (newline (chat "DVH" line0 '()))
+;                (make-package (chat "DVH" (line "" 0) (list (entry "DVH" "abc")))
+;                              (entry "DVH" "abc")))
+;  (check-equal? (newline (chat "DVH" line0 (list (entry "388Q" "sup"))))
+;                (make-package (chat "DVH" (line "" 0)
+;                                    (list (entry "DVH" "abc")
+;                                          (entry "388Q" "sup")))
+;                              (entry "DVH" "abc"))))
 
 
 
@@ -166,12 +166,16 @@
 			(regex-loop (line-str (chat-line c)) 
 			(list 
 				(cons
-					 #rx"^/nick (.+)$" 
+					 #rx"^/nick ([^ ]+)$" 
 					(lambda (lst) (make-package (chat user (line "" 0) entries) (crpc "nick" (car (cdr lst)) "" "")) )
 				)
 				(cons	
 					 #rx"^/msg ([^ ]+) (.+)$" 
 					(lambda (lst) (make-package (chat user (line "" 0) entries) (crpc "send" "" (list-ref lst 1) (list-ref lst 2) )) )
+				)	
+				(cons	 
+					 #rx"^/join ([^ ]+)$" 
+					(lambda (lst) (make-package (chat user (line "" 0) entries) (crpc "join" "" (list-ref lst 1) "" )) )
 				)
 			))
 		])
