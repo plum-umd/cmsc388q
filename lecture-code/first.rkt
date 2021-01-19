@@ -14,39 +14,33 @@
     [on-tick add5 1/28]
     [on-key reset]))
 
-(+ 1 2)
-
-(string-append "fred" "wilma")
-
-(define x 3.14)
-
-(define (f y)
-  (expt 2 y))
 
 
 (define spaceship
   (bitmap/url "https://www.cs.umd.edu/class/winter2021/cmsc388Q/shipBlue_manned.png"))
 
-
-(overlay (scale .7 spaceship)
-         (rectangle 400 200 "solid" "yellow"))
-
+(define width 1000)
+(define length 1000)
 
 ;; (Cons Integer Color) -> Image
 (define (spin i)
   (overlay (rotate (car i) spaceship)
-           (empty-scene 300 300 (cdr i))))
+           (empty-scene 1000 1000 (cdr i))))
 
 (require 2htdp/universe)
 
 ;(animate spin)
 
+
+;; added more colors 
 (define (reset i ke)
   (match ke
     [" " (cons 0 (cdr i))]
-    ["r" (cons (car i) "red")]
-    ["y" (cons (car i) "yellow")]
-    ["p" (cons (car i) "purple")]
+    
+    ["left" (cons (car i) "cyan" )]
+    ["right" (cons (car i) "purple")]
+    ["up" (cons (car i) "green")]
+    ["down" (cons (car i) "blue")]
     [_ i]))
 
 (define (add5 x)
