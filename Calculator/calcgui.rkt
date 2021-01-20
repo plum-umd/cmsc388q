@@ -46,19 +46,19 @@
      [label "9"]
      [min-width 30]
      [callback (λ (button event)
-                 (push-number 9))])
+                 (push-number "9"))])
 
 (new button% [parent row1]
      [label "8"]
      [min-width 30]
      [callback (λ (button event)
-                 (push-number button))])
+                 (push-number "8"))])
 
 (new button% [parent row1]
      [label "7"]
      [min-width 30]
      [callback (λ (button event)
-                 (push-number button))])
+                 (push-number "7"))])
 
 (new button% [parent row1]
      [label "+"]
@@ -72,19 +72,19 @@
      [label "6"]
      [min-width 30]     
      [callback (λ (button event)
-                 (push-number button))])
+                 (push-number "6"))])
 
 (new button% [parent row2]
      [label "5"]
      [min-width 30]
      [callback (λ (button event)
-                 (push-number button))])
+                 (push-number "5"))])
 
 (new button% [parent row2]
      [label "4"]
      [min-width 30]
      [callback (λ (button event)
-                 (push-number button))])
+                 (push-number "4"))])
 
 (new button% [parent row2]
      [label "-"]
@@ -98,19 +98,19 @@
      [label "3"]
      [min-width 30]
      [callback (λ (button event)
-                 (push-number button))])
+                 (push-number (send button get-label)))])
 
 (new button% [parent row3]
      [label "2"]
      [min-width 30]
      [callback (λ (button event)
-                 (push-number button))])
+                 (push-number "2"))])
 
 (new button% [parent row3]
      [label "1"]
      [min-width 30]
      [callback (λ (button event)
-                 (push-number button))])
+                 (push-number "1"))])
 
 (new button% [parent row3]
      [label "×"]
@@ -124,13 +124,13 @@
      [label "0"]
      [min-width 30]
      [callback (λ (button event)
-                 (push-number button))])
+                 (push-number "0"))])
 
 (new button% [parent row4]
      [label "."]
      [min-width 30]
      [callback (λ (button event)
-                 (push-number button))])  
+                 (push-number "."))])  
 
 (new button% [parent row4]
      [label "="]
