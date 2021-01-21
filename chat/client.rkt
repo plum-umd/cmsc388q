@@ -292,7 +292,6 @@
 ;; returns the index of the first colon in the provided String or #f if none
 ;; exists only to assist in readability of other functions
 (define (has-colon str i)
-  
   (if (< i (string-length str))
          (if (char=? (string-ref str i) #\:)
              i
