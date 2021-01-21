@@ -107,3 +107,14 @@ HERE
                 (vector-ref v 0)
                 (vector-ref v 1)))
       (loop)))))
+
+(define banList '())
+
+(define (!Ban str)
+  (cond
+    [(string-ci=? "" str) "Cannot add empty string to the Ban List"] 
+    [(string? str) (string-append str " Has been added to the Ban List")]
+     
+    
+    )
+  )
