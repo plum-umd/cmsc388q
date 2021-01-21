@@ -3,7 +3,7 @@
 
 ;; all but the final few emojis are from here:
 ;; https://github.com/twitter/twemoji/tree/master/assets/72x72
-;; I weeded out a few seemed interesting/commmon
+;; I weeded out a few that seemed interesting/commmon
 ;; the rest are from the cmsc388q website
 (define BASE-URL "https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/")
 (define SCALE .25)
