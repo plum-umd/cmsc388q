@@ -20,8 +20,17 @@
 ;; See server.rkt.
 
 (provide start-chat)
+
+;; added requirements for -> string-util 
+;; https://docs.racket-lang.org/string-util/index.html
+;; used for string-first-char-occurrence method
 (require 2htdp/image
-         2htdp/universe)
+         2htdp/universe
+         string-util)
+
+;; emojify.rkt contains a hash table of string emoji pairs
+(require "emojify.rkt")
+
 
 (module+ test (require rackunit))
 (module+ private (provide (all-from-out (submod ".."))))
@@ -47,7 +56,7 @@
 ;; type Entry = (entry ID String)
 (struct entry (user str) #:prefab)
 
-;; type Line = (line String Index)
+;; type Line = (line String Index ColIndex)
 (struct line (str i) #:prefab)
 
 ;; type ID = String
@@ -63,7 +72,6 @@
 (define USER-COLOR "purple")
 (define HEIGHT (* TEXT-SIZE 30))
 (define WIDTH  (* TEXT-SIZE 25))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Chat
@@ -195,16 +203,18 @@
   (match e
     [(entry user str)
      (beside (text (string-append user "> ") TEXT-SIZE USER-COLOR)
-             (text str TEXT-SIZE MSG-COLOR))]))
+             (emojify str (text "" TEXT-SIZE MSG-COLOR)))]))
 
 ;; Line -> Image
 (define (draw-line l)
   (match l
     [(line str i)
      (beside (text (string-append "> ") TEXT-SIZE USER-COLOR)
-             (text (substring str 0 i) TEXT-SIZE MSG-COLOR)
+             ;;(text (substring str 0 i) TEXT-SIZE MSG-COLOR)
+             (emojify (substring str 0 i) (text "" TEXT-SIZE MSG-COLOR))
              (rectangle 1 TEXT-SIZE "solid" "black")
-             (text (substring str i) TEXT-SIZE MSG-COLOR))]))
+             ;;(text (substring str i) TEXT-SIZE MSG-COLOR))]))
+             (emojify (substring str i) (text "" TEXT-SIZE MSG-COLOR)))]))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -269,3 +279,91 @@
     [(line s i)
      (line (string-append (substring s 0 i) c (substring s i))
            (add1 i))]))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Emoji functionality added
+
+;; uses the emoji-list from emojify.rkt
+;; relies, too, on string-first-char-occurrence from the
+;; string-util library (https://docs.racket-lang.org/string-util/index.html)
+;; which returns either the index of the first occurence of a character or #f
+
+;; String -> int or #f
+;; returns the index of the first colon in the provided String or #f if none
+;; exists only to assist in readability of other functions
+(define (has-colon str)
+  (string-first-char-occurrence str #\:))
+
+;; String -> int or #f
+;; returns index of second colon in provided string or #f if none
+(define (has-colons str)
+  (if (and (has-colon str)
+           (has-colon (substring str (+ 1 (has-colon str)))))
+      (+ 1 (has-colon str) (has-colon (substring str (+ 1 (has-colon str)))))
+      #f))
+  
+;; String -> String
+;; returns the string which follows the second colon
+;; provided that a key exists between the two colons
+;; if not -> returns string following the first colon
+(define (after-colons str)
+  (if (> (+ 1 (has-colons str)) (string-length str))
+      ""
+      (if (dict-ref emoji-list (emoji-key str) #f) 
+          (substring str (+ 1 (has-colons str)))
+          (substring str (+ 1 (has-colon str))))))
+
+;; String -> String
+;; returns the text between two colons
+;; e.g. ":Jeffrey-Beaumont:" -> "Jeffrey-Beaumont"
+(define (emoji-key str)
+  (substring str (+ 1 (has-colon str)) (has-colons str)))
+
+;; String -> Image
+;; if the provided string is a valid key, it returns the
+;; emoji paired with the key; otherwise, it returns the key
+;; between two colons
+(define (fetch-emoji key)
+  (dict-ref emoji-list key
+            (text (string-append ":" key ":") TEXT-SIZE MSG-COLOR)))
+
+;; String -> Image
+;; returns an image of the text preceeding the first colon
+;; e.g. hello :happy: returns the image hello 
+(define (pre-emoji-str str)
+  (text (substring str 0 (has-colon str)) TEXT-SIZE MSG-COLOR))
+
+;; String Image -> Image
+;; Takes a String and replaces emoji keys with their paired value
+;; (e.g. :thinking: -> the image associated with "thinking")
+;; Essentially, it constructs an image by parsing the string from
+;; colon-to-colon, appending emoji images as it goes.  
+(define (emojify str image)
+
+  ;; if branch taken if two colons are present
+  ;; and a valid key exists between them
+  (if (and (has-colons str)
+           (dict-ref emoji-list (emoji-key str) #f))
+
+      ;; emojify called on string following second colon
+      (emojify (after-colons str)
+
+               ;; image of string before preceeding
+               ;; first colon beside added emoji
+               (beside image
+                       (pre-emoji-str str)
+                       (fetch-emoji (emoji-key str))))
+
+      ;; if two colons exist but no key is present,
+      ;; the string up to and including the first colon is
+      ;; put beside image, and emojify is called on
+      ;; the remainder of the string
+      (if (has-colons str)
+          (emojify (after-colons str)
+                   (beside image
+                           (text (substring str 0 (+ 1 (has-colon str))) TEXT-SIZE MSG-COLOR)))                
+
+          ;; base case: fewer than two colons exist,
+          ;; so the text is appended to image.
+          (beside image (text str TEXT-SIZE MSG-COLOR)))))
