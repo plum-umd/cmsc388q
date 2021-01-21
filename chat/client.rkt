@@ -163,6 +163,15 @@
                msg)))
 
 
+;; String -> Boolean
+;; Detect chat language
+(define (check-lang l)
+  (match l
+    [(line str i)
+     (if (regexp-match #rx"^[a-z]*$" str)
+         #t
+         #f)]))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Visualize a Chat
 
@@ -178,17 +187,21 @@
   (match c
     [(chat user line entries)
      (above/align "left"
-                  (draw-entries entries)
+                  (draw-entries entries line)
                   (draw-line line))]))
 
 ;; (Listof Entry) -> Image
-(define (draw-entries es)
+(define (draw-entries es line)
   (match es
     ['() empty-image]
     [(cons e es)
-     (above/align "left"
-                  (draw-entries es)
-                  (draw-entry e))]))
+     (if (check-lang line)
+         (above/align "left"
+                  (draw-entries es line)
+                  (draw-entry e))
+         (above/align "right"
+                  (draw-entries es line)
+                  (draw-entryH e)))]))
 
 ;; Entry -> Image
 (define (draw-entry e)
@@ -196,6 +209,13 @@
     [(entry user str)
      (beside (text (string-append user "> ") TEXT-SIZE USER-COLOR)
              (text str TEXT-SIZE MSG-COLOR))]))
+
+;; Entry -> Image
+(define (draw-entryH e)
+  (match e
+    [(entry user str)
+     (beside (text str TEXT-SIZE MSG-COLOR)
+             (text (string-append " < " user) TEXT-SIZE USER-COLOR))]))
 
 ;; Line -> Image
 (define (draw-line l)
