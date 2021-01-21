@@ -56,7 +56,7 @@
 ;; type Entry = (entry ID String)
 (struct entry (user str) #:prefab)
 
-;; type Line = (line String Index ColIndex)
+;; type Line = (line String Index)
 (struct line (str i) #:prefab)
 
 ;; type ID = String
@@ -210,10 +210,14 @@
   (match l
     [(line str i)
      (beside (text (string-append "> ") TEXT-SIZE USER-COLOR)
-             ;;(text (substring str 0 i) TEXT-SIZE MSG-COLOR)
+             
+             ;; instead of rendering just the text, emojis are now rendered live in line
+             ;; this is the emojified line before the cursor
              (emojify (substring str 0 i) (text "" TEXT-SIZE MSG-COLOR))
+             
              (rectangle 1 TEXT-SIZE "solid" "black")
-             ;;(text (substring str i) TEXT-SIZE MSG-COLOR))]))
+             
+             ;; emojified line after the cursor
              (emojify (substring str i) (text "" TEXT-SIZE MSG-COLOR)))]))
 
 
