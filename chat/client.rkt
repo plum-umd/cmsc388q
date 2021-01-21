@@ -290,7 +290,8 @@
 
 ;; String int -> int or #f
 ;; returns the index of the first colon in the provided String or #f if none
-;; exists only to assist in readability of other functions
+;; checks if char at each position is a colon
+;; if no colon is found, returns false
 (define (has-colon str i)
   (if (< i (string-length str))
          (if (char=? (string-ref str i) #\:)
