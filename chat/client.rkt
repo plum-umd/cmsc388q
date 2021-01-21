@@ -21,16 +21,11 @@
 
 (provide start-chat)
 
-;; added requirements for -> string-util 
-;; https://docs.racket-lang.org/string-util/index.html
-;; used for string-first-char-occurrence method
 (require 2htdp/image
-         2htdp/universe
-         string-util)
+         2htdp/universe)
 
 ;; emojify.rkt contains a hash table of string emoji pairs
 (require "emojify.rkt")
-
 
 (module+ test (require rackunit))
 (module+ private (provide (all-from-out (submod ".."))))
@@ -289,22 +284,27 @@
 ;; Emoji functionality added
 
 ;; uses the emoji-list from emojify.rkt
-;; relies, too, on string-first-char-occurrence from the
+;; initially relied on string-first-char-occurrence from the
 ;; string-util library (https://docs.racket-lang.org/string-util/index.html)
-;; which returns either the index of the first occurence of a character or #f
+;; but I removed dependency/made my own version
 
-;; String -> int or #f
+;; String int -> int or #f
 ;; returns the index of the first colon in the provided String or #f if none
 ;; exists only to assist in readability of other functions
-(define (has-colon str)
-  (string-first-char-occurrence str #\:))
+(define (has-colon str i)
+  
+  (if (< i (string-length str))
+         (if (char=? (string-ref str i) #\:)
+             i
+             (has-colon str (+ i 1)))
+         #f))
 
 ;; String -> int or #f
 ;; returns index of second colon in provided string or #f if none
 (define (has-colons str)
-  (if (and (has-colon str)
-           (has-colon (substring str (+ 1 (has-colon str)))))
-      (+ 1 (has-colon str) (has-colon (substring str (+ 1 (has-colon str)))))
+  (if (and (has-colon str 0)
+           (has-colon (substring str (+ 1 (has-colon str 0))) 0))
+      (+ 1 (has-colon str 0) (has-colon (substring str (+ 1 (has-colon str 0))) 0))
       #f))
   
 ;; String -> String
@@ -316,13 +316,13 @@
       ""
       (if (dict-ref emoji-list (emoji-key str) #f) 
           (substring str (+ 1 (has-colons str)))
-          (substring str (+ 1 (has-colon str))))))
+          (substring str (+ 1 (has-colon str 0))))))
 
 ;; String -> String
 ;; returns the text between two colons
 ;; e.g. ":Jeffrey-Beaumont:" -> "Jeffrey-Beaumont"
 (define (emoji-key str)
-  (substring str (+ 1 (has-colon str)) (has-colons str)))
+  (substring str (+ 1 (has-colon str 0)) (has-colons str)))
 
 ;; String -> Image
 ;; if the provided string is a valid key, it returns the
@@ -336,7 +336,7 @@
 ;; returns an image of the text preceeding the first colon
 ;; e.g. hello :happy: returns the image hello 
 (define (pre-emoji-str str)
-  (text (substring str 0 (has-colon str)) TEXT-SIZE MSG-COLOR))
+  (text (substring str 0 (has-colon str 0)) TEXT-SIZE MSG-COLOR))
 
 ;; String Image -> Image
 ;; Takes a String and replaces emoji keys with their paired value
@@ -366,7 +366,7 @@
       (if (has-colons str)
           (emojify (after-colons str)
                    (beside image
-                           (text (substring str 0 (+ 1 (has-colon str))) TEXT-SIZE MSG-COLOR)))                
+                           (text (substring str 0 (+ 1 (has-colon str 0))) TEXT-SIZE MSG-COLOR)))                
 
           ;; base case: fewer than two colons exist,
           ;; so the text is appended to image.
