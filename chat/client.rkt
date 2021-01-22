@@ -22,6 +22,8 @@
 (provide start-chat)
 (require 2htdp/image
          2htdp/universe)
+(require srfi/13)
+(require racket/file)
 
 (module+ test (require rackunit))
 (module+ private (provide (all-from-out (submod ".."))))
@@ -63,6 +65,7 @@
 (define USER-COLOR "purple")
 (define HEIGHT (* TEXT-SIZE 30))
 (define WIDTH  (* TEXT-SIZE 25))
+(define badlanguage (file->lines "bad.txt"))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -114,16 +117,32 @@
                                           (entry "388Q" "sup")))
                               (entry "DVH" "abc"))))
 
+;; Line -> Boolean
+;; Detect BAD words! Change detected line to "Bless your soul, honey"
+(define (ismember str strs) (ormap [lambda (s) (string=? s str)] strs))
+
+(define (profanity-check s)
+  (if (ismember s badlanguage)
+      #f
+      #t))
+
 ;; Chat -> ChatPackage
 ;; Commit current line to entries and start new line
 (define (newline c)
   (match c
     [(chat user (line str i) entries)
-     (make-package 
-      (chat user
-            (line "" 0)
-            (cons (entry user str) entries))
-      (entry user str))]))
+     (if (profanity-check str)
+         (make-package 
+          (chat user
+                (line "" 0)
+                (cons (entry user str) entries))
+          (entry user str))
+         (make-package
+          (chat user
+                (line "" 0)
+                (cons (entry user "Bless your soul, honey") entries))
+          (entry user "Bless your soul, honey"))
+          )]))
        
 ;; String -> Boolean
 (define (1string? s)
@@ -172,6 +191,8 @@
          #t
          #f)]))
 
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Visualize a Chat
 
@@ -195,13 +216,13 @@
   (match es
     ['() empty-image]
     [(cons e es)
-     (if (check-lang line)
+;;     (if (check-lang line)
          (above/align "left"
                   (draw-entries es line)
-                  (draw-entry e))
-         (above/align "right"
-                  (draw-entries es line)
-                  (draw-entryH e)))]))
+                  (draw-entry e))]))
+;;         (above/align "right"
+;;                  (draw-entries es line)
+;;                  (draw-entryH e)))]))
 
 ;; Entry -> Image
 (define (draw-entry e)
@@ -211,11 +232,11 @@
              (text str TEXT-SIZE MSG-COLOR))]))
 
 ;; Entry -> Image
-(define (draw-entryH e)
-  (match e
-    [(entry user str)
-     (beside (text str TEXT-SIZE MSG-COLOR)
-             (text (string-append " < " user) TEXT-SIZE USER-COLOR))]))
+;;(define (draw-entryH e)
+;;  (match e
+;;    [(entry user str)
+;;     (beside (text (string-reverse! str) TEXT-SIZE MSG-COLOR)
+;;             (text (string-append " < " user) TEXT-SIZE USER-COLOR))]))
 
 ;; Line -> Image
 (define (draw-line l)
