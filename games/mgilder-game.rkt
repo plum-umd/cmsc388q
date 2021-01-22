@@ -17,9 +17,12 @@
 (define HEIGHT 900)
 (define WIDTH  900)
 
-(define SPIN-SPEED 2)
-(define METEOR-SPEED 2)
-(define METEOR-SIZE 30)
+(define COOLDOWN 20)
+
+(define SPIN-SPEED 3/2)
+(define METEOR-SPEED 1)
+(define METEOR-INTERVAL 50)
+(define METEOR-SIZE 60)
 (define SPAWN-DISTANCE (exact-floor (/ WIDTH 1.3)))
 
 (define METEOR-IMAGE (circle METEOR-SIZE 100 METEOR-COLOR))
@@ -55,7 +58,7 @@
 
 ;; Launch a spinning blue spaceship
 (module* main #f
-  (big-bang (state 0 -9999 (cons (meteor 300 0) '()) '())
+  (big-bang (state 0 -9999 (cons (meteor 0 0) '()) '())
     [on-draw handleDraw]
     [on-tick handleTick]
     [stop-when handleDead]
@@ -64,7 +67,7 @@
 (define (checkMeteorDead m t)
     (match m
         ['() #f]
-        [z (<= (gmeteor-dist z t) (* METEOR-SIZE 1.5))]))
+        [z (<= (gmeteor-dist z t) (* METEOR-SIZE 1.2))]))
 
 (define (handleDead gameState)
     (match gameState
@@ -81,7 +84,7 @@
 (define (handleDraw gameState)
     (match gameState
         [(state t l mlist elist) 
-    (place-image/align (text (string-append "SCORE: " (number->string (exact-floor (/ t 60)))) TEXT-SIZE TEXT-COLOR) 0 HEIGHT "left" "bottom"
+    (place-image/align (text (string-append "SCORE: " (number->string (exact-floor (/ t 28)))) TEXT-SIZE TEXT-COLOR) 0 HEIGHT "left" "bottom"
         (overlay (rotate (* -1 (* t SPIN-SPEED)) spaceship)
             (drawEffects elist t
                 (drawMeteors mlist t
@@ -107,21 +110,29 @@
   (match ke
     [" " 
         (match gameState
-            [(state t l mlist elist) (state t l (fireShot mlist t) (cons (effect (* t SPIN-SPEED) t) elist))])]
+            [(state t l mlist elist) (if (>= (- t l) COOLDOWN) 
+                (state t t (fireShot mlist t) (cons (effect (* t SPIN-SPEED) t) elist))
+                (state t l mlist elist))])]
+                
     [_ gameState]))
 
 
 (define (newMeteor ml t)
-    (if (= (modulo t 200) 0)
+    (if (= (modulo t METEOR-INTERVAL) 0)
         (cons (meteor (random 360) t) ml)
         ml))
+
+(define (angDiff x y)
+    (min (angNorm (- x y)) (- 360 (angNorm (- x y)))))
 
 (define (angNorm a)
     (modulo (exact-floor a) 360))
 
 ;   (y - bound) <= x <= (y + bound)
 (define (angleBounds x y bound)
-    (<= (angNorm (abs (- x y))) bound) )
+    ;(or (<= (angNorm (abs (- x y))) bound) (<= (angNorm (abs (- y x))) bound) ))
+    ;(<= (angNorm (- (max (angNorm x) (angNorm y)) (min (angNorm x) (angNorm y)))) bound))
+    (<= (angDiff x y) bound))
 
 (define (shotTolerance m t)
     (max
