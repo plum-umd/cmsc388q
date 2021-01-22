@@ -24,6 +24,7 @@
   (send screen set-brush color 'solid)
   (send screen draw-rectangle (* x BLOCK_SIZE) (* y BLOCK_SIZE) BLOCK_SIZE BLOCK_SIZE))
 
+; Changes the position of the snake based off the previous direction from player
 (define (move-snake position)
   (case position
     ['l (set! snake (move-block (- (snake-head 0 snake) 1) (snake-head 1 snake)))]
@@ -31,6 +32,7 @@
     ['u (set! snake (move-block (snake-head 0 snake) (- (snake-head 1 snake) 1)))]
     ['d (set! snake (move-block (snake-head 0 snake) (+ (snake-head 1 snake) 1)))]))
 
+; Checks if the snake has hit the block
 (define (touched-block snakes block [index 0] [x 666]) 
   (if (> (length snakes) index)
     (if (and (not (= x index)) (and 
@@ -40,6 +42,7 @@
       (touched-block snakes block (+ index 1) x))
     #f))
 
+;Increases size of snake each time it eats a block and increases points
 (define expand-snake (lambda () 
   (define x (car (reverse snake)))
   (set! storage (list (inexact->exact (round (* (random) (- WIDTH 1)))) (inexact->exact (round (* (random) (- HEIGHT 1)))) ))
@@ -88,6 +91,7 @@
   (if first 1 (send screen draw-text "(press r to restart)" (- (round (/ (* WIDTH BLOCK_SIZE) 2)) 100) (- (round (/ (* HEIGHT BLOCK_SIZE) 2)) 20)))
 ))
 
+;Prompt at the start of the game to begin
 (define begin (lambda ()
   (send screen draw-text "  Welcome to Snake     " (- (round (/ (* WIDTH BLOCK_SIZE) 2)) 110) (- (round (/ (* HEIGHT BLOCK_SIZE) 2)) 40))
   (send screen draw-text "Expand the Screen First     " (- (round (/ (* WIDTH BLOCK_SIZE) 2)) 125) (- (round (/ (* HEIGHT BLOCK_SIZE) 2)) 20))
@@ -104,6 +108,7 @@
 
 (send frame show #t)
 
+;Checks if the snake has reached a collision with the wall and prints game over
 (define updater (new timer%
   [notify-callback (lambda ()
     (send screen clear)
