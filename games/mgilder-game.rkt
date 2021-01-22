@@ -95,6 +95,7 @@
 ;;   increment tick counter
 ;;   spawn meteors (maybe every x ticks) (28 per second so maybe every 28?)
 ;;   check if game over (meteor hits)
+;;   remove old lasers(i.e effects)
 
 (define (handleTick gameState)
     (match gameState
@@ -103,8 +104,9 @@
 
 
 ;; handleKey
-;;   shoot with space, handle cooldown
-;;   delete hit meteors
+;;   shoot with spacebar + handle cooldown
+;;   delete meteors that are hit
+;;   add effects (lasers)
 
 (define (handleKey gameState ke)
   (match ke
@@ -116,12 +118,13 @@
                 
     [_ gameState]))
 
-
+;; spawn a new meteor
 (define (newMeteor ml t)
     (if (= (modulo t METEOR-INTERVAL) 0)
         (cons (meteor (random 360) t) ml)
         ml))
 
+;; get the min differance between two angles  ->  i.e.   359deg and 1deg are close not far apart
 (define (angDiff x y)
     (min (angNorm (- x y)) (- 360 (angNorm (- x y)))))
 
@@ -134,26 +137,31 @@
     ;(<= (angNorm (- (max (angNorm x) (angNorm y)) (min (angNorm x) (angNorm y)))) bound))
     (<= (angDiff x y) bound))
 
+; get angle of error for given meteor ( so you don't have to hit perfect center)
 (define (shotTolerance m t)
     (max
         (- 90 (* (/ 180 pi) (acos (/ (* 1 METEOR-SIZE) (gmeteor-dist m t)))))
         (* (/ 180 pi) (asin (/ (* 1 METEOR-SIZE) (gmeteor-dist m t))))))
 
+; did the current shot hit meteor m
 (define (shotHit m t)
     (match m
         [(meteor d b) (angleBounds (* t SPIN-SPEED) d (shotTolerance m t))]))
 
+; perform a laser shot and remove hit meteors
 (define (fireShot ml t)
     (filter (lambda (m) (not (shotHit m t))) ml))
 
+; is effect e alive
 (define (livingEffect e t)
     (match e
         [(effect d b) (<= (- t b) LASER-LIFETIME)]))
 
+; filter out expired effects (i.e. lasers)
 (define (removeEffects el t)
     (filter (lambda (e) (livingEffect e t)) el))
 
-
+; draw effects (lasers)
 (define (drawEffects el t base) 
     (match el
         [' () base]
@@ -167,6 +175,7 @@
 )])]))
 
 
+; get meteor m distance to center
 (define (gmeteor-dist m t)
     (match m
         [(meteor d b)
@@ -174,6 +183,7 @@
                 SPAWN-DISTANCE 
                 (* (- t b) METEOR-SPEED))]))
 
+; get meteor m x-distance to center
 (define (gmeteor-x m t)
     (match m
         [(meteor d b) (+
@@ -182,6 +192,7 @@
                             (cos (* d (/ pi 180))) )
                         (/ WIDTH 2))]))
 
+; get meteor m y-distance to center
 (define (gmeteor-y m t)
     (match m
         [(meteor d b) (+ 
@@ -190,15 +201,16 @@
                             (sin (* d (/ pi 180))) )
                         (/ HEIGHT 2))]))
 
+; draw all meteors
 (define (drawMeteors el t base) 
     (match el
         ['() base]
-        ;[(cons e es) (place-image METEOR-IMAGE (gmeteor-x e t) (gmeteor-y e t) (drawMeteors es t base))]))
-        [(cons e es)
-            (match e [(meteor d b)
-                    (scene+line (place-image METEOR-IMAGE (gmeteor-x e t) (gmeteor-y e t) (drawMeteors es t base))
-                    (/ WIDTH 2) (/ HEIGHT 2) (+ (/ WIDTH 2) (* (* 2 WIDTH) (cos (* (- d (shotTolerance e t)) (/ pi 180.0))))) (+ (/ HEIGHT 2) (* (* 2 HEIGHT) (sin (* (- d (shotTolerance e t)) (/ pi 180.0)))))
-                    ;(color 0 0 255 (- 255 (* 255 (exact-floor (/ (- t b) LASER-LIFETIME)))) )
-                    (make-pen LASER-COLOR 1 "solid" "round" "round")
-)])]))
+        [(cons e es) (place-image METEOR-IMAGE (gmeteor-x e t) (gmeteor-y e t) (drawMeteors es t base))]))
+        ; below is for debugging hitboxes
+        ;[(cons e es)
+            ;(match e [(meteor d b)
+            ;        (scene+line (place-image METEOR-IMAGE (gmeteor-x e t) (gmeteor-y e t) (drawMeteors es t base))
+            ;        (/ WIDTH 2) (/ HEIGHT 2) (+ (/ WIDTH 2) (* (* 2 WIDTH) (cos (* (- d (shotTolerance e t)) (/ pi 180.0))))) (+ (/ HEIGHT 2) (* (* 2 HEIGHT) (sin (* (- d (shotTolerance e t)) (/ pi 180.0)))))
+            ;        (make-pen LASER-COLOR 1 "solid" "round" "round")
+;)])]))
 
