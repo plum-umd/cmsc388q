@@ -12,11 +12,13 @@
 (define BACKGROUND-COLOR "white")
 (define METEOR-COLOR "purple")
 (define LASER-COLOR "blue")
+(define LASER-WIDTH 5)
+(define LASER-LIFETIME 5)
 (define HEIGHT 900)
 (define WIDTH  900)
 
-(define SPIN-SPEED 4)
-(define METEOR-SPEED 3)
+(define SPIN-SPEED 2)
+(define METEOR-SPEED 2)
 (define METEOR-SIZE 30)
 (define SPAWN-DISTANCE (exact-floor (/ WIDTH 1.3)))
 
@@ -53,7 +55,7 @@
 
 ;; Launch a spinning blue spaceship
 (module* main #f
-  (big-bang (state 0 -9999 (cons (meteor 100 0) (cons (meteor -60 0) '())) '())                ;(cons 0 "white")
+  (big-bang (state 0 -9999 (cons (meteor 300 0) '()) '())
     [on-draw handleDraw]
     [on-tick handleTick]
     [stop-when handleDead]
@@ -80,9 +82,9 @@
     (match gameState
         [(state t l mlist elist) 
     (place-image/align (text (string-append "SCORE: " (number->string (exact-floor (/ t 60)))) TEXT-SIZE TEXT-COLOR) 0 HEIGHT "left" "bottom"
-        (overlay (rotate (* t SPIN-SPEED) spaceship)
-            (drawEffects elist
-                (drawMeteors t mlist
+        (overlay (rotate (* -1 (* t SPIN-SPEED)) spaceship)
+            (drawEffects elist t
+                (drawMeteors mlist t
                     (empty-scene WIDTH HEIGHT BACKGROUND-COLOR)))))]))
 
 
@@ -93,7 +95,7 @@
 
 (define (handleTick gameState)
     (match gameState
-        [(state t l mlist elist) (state (+ t 1) l mlist elist)]))
+        [(state t l mlist elist) (state (+ t 1) l (newMeteor mlist t) (removeEffects elist t))]))
 
 
 
@@ -103,15 +105,56 @@
 
 (define (handleKey gameState ke)
   (match ke
-    ;[" " (cons 0 (cdr i))]
+    [" " 
+        (match gameState
+            [(state t l mlist elist) (state t l (fireShot mlist t) (cons (effect (* t SPIN-SPEED) t) elist))])]
     [_ gameState]))
 
 
+(define (newMeteor ml t)
+    (if (= (modulo t 200) 0)
+        (cons (meteor (random 360) t) ml)
+        ml))
+
+(define (angNorm a)
+    (modulo (exact-floor a) 360))
+
+;   (y - bound) <= x <= (y + bound)
+(define (angleBounds x y bound)
+    (<= (angNorm (abs (- x y))) bound) )
+
+(define (shotTolerance m t)
+    (max
+        (- 90 (* (/ 180 pi) (acos (/ (* 1 METEOR-SIZE) (gmeteor-dist m t)))))
+        (* (/ 180 pi) (asin (/ (* 1 METEOR-SIZE) (gmeteor-dist m t))))))
+
+(define (shotHit m t)
+    (match m
+        [(meteor d b) (angleBounds (* t SPIN-SPEED) d (shotTolerance m t))]))
+
+(define (fireShot ml t)
+    (filter (lambda (m) (not (shotHit m t))) ml))
+
+(define (livingEffect e t)
+    (match e
+        [(effect d b) (<= (- t b) LASER-LIFETIME)]))
+
+(define (removeEffects el t)
+    (filter (lambda (e) (livingEffect e t)) el))
 
 
-(define (drawEffects el base) 
-    base
-)
+(define (drawEffects el t base) 
+    (match el
+        [' () base]
+        [(cons e es) 
+            (match e
+            [(effect d b)
+                (scene+line (drawEffects es t base)
+                    (/ WIDTH 2) (/ HEIGHT 2) (+ (/ WIDTH 2) (* (* 2 WIDTH) (cos (* d (/ pi 180.0))))) (+ (/ HEIGHT 2) (* (* 2 HEIGHT) (sin (* d (/ pi 180.0)))))
+                    ;(color 0 0 255 (- 255 (* 255 (exact-floor (/ (- t b) LASER-LIFETIME)))) )
+                    (make-pen LASER-COLOR LASER-WIDTH "solid" "round" "round")
+)])]))
+
 
 (define (gmeteor-dist m t)
     (match m
@@ -136,8 +179,15 @@
                             (sin (* d (/ pi 180))) )
                         (/ HEIGHT 2))]))
 
-(define (drawMeteors t el base) 
+(define (drawMeteors el t base) 
     (match el
         ['() base]
-        [(cons e es) (place-image METEOR-IMAGE (gmeteor-x e t) (gmeteor-y e t) (drawMeteors t es base))]))
+        ;[(cons e es) (place-image METEOR-IMAGE (gmeteor-x e t) (gmeteor-y e t) (drawMeteors es t base))]))
+        [(cons e es)
+            (match e [(meteor d b)
+                    (scene+line (place-image METEOR-IMAGE (gmeteor-x e t) (gmeteor-y e t) (drawMeteors es t base))
+                    (/ WIDTH 2) (/ HEIGHT 2) (+ (/ WIDTH 2) (* (* 2 WIDTH) (cos (* (- d (shotTolerance e t)) (/ pi 180.0))))) (+ (/ HEIGHT 2) (* (* 2 HEIGHT) (sin (* (- d (shotTolerance e t)) (/ pi 180.0)))))
+                    ;(color 0 0 255 (- 255 (* 255 (exact-floor (/ (- t b) LASER-LIFETIME)))) )
+                    (make-pen LASER-COLOR 1 "solid" "round" "round")
+)])]))
 
