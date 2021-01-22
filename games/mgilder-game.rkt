@@ -3,6 +3,8 @@
 (require 2htdp/image)
 (require 2htdp/universe)
 
+;;  press space bar to shoot!!!
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Constants
@@ -17,11 +19,11 @@
 (define HEIGHT 900)
 (define WIDTH  900)
 
-(define COOLDOWN 20)
+(define COOLDOWN 20)  ; laser cooldown in ticks
 
-(define SPIN-SPEED 3/2)
+(define SPIN-SPEED 4)
 (define METEOR-SPEED 1)
-(define METEOR-INTERVAL 50)
+(define METEOR-INTERVAL 50)  ; decrease for more meteors
 (define METEOR-SIZE 60)
 (define SPAWN-DISTANCE (exact-floor (/ WIDTH 1.3)))
 
@@ -64,11 +66,15 @@
     [stop-when handleDead]
     [on-key  handleKey]))
 
+
+;; check if meteor m has crashed into us
 (define (checkMeteorDead m t)
     (match m
         ['() #f]
         [z (<= (gmeteor-dist z t) (* METEOR-SIZE 1.2))]))
 
+
+;; to check if a meteor has crashed into us (i.e. game over)
 (define (handleDead gameState)
     (match gameState
         [(state t l mlist elist)
@@ -170,7 +176,6 @@
             [(effect d b)
                 (scene+line (drawEffects es t base)
                     (/ WIDTH 2) (/ HEIGHT 2) (+ (/ WIDTH 2) (* (* 2 WIDTH) (cos (* d (/ pi 180.0))))) (+ (/ HEIGHT 2) (* (* 2 HEIGHT) (sin (* d (/ pi 180.0)))))
-                    ;(color 0 0 255 (- 255 (* 255 (exact-floor (/ (- t b) LASER-LIFETIME)))) )
                     (make-pen LASER-COLOR LASER-WIDTH "solid" "round" "round")
 )])]))
 
