@@ -1,5 +1,9 @@
 #lang racket
 
+; attempt at creating a genetic algorithm in racket to sort an array 
+; extremely inefficient but fun :)
+
+
 (require math/array)
 
 ; size of our array
