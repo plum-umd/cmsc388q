@@ -42,7 +42,7 @@
 
 ;; cooldown ->  last_shoot_tick
 
-;; meteor ->  (  angle   birthtick  alive )
+;; meteor ->  (  angle   birthtick )
 
 ;; effect -> ( angle birthtick )     ;; this is for the lasers to be drawn and fade out
 
@@ -74,7 +74,7 @@
         [z (<= (gmeteor-dist z t) (* METEOR-SIZE 1.2))]))
 
 
-;; to check if a meteor has crashed into us (i.e. game over)
+;; to check if any meteor has crashed into us (i.e. game over)
 (define (handleDead gameState)
     (match gameState
         [(state t l mlist elist)
@@ -100,7 +100,6 @@
 ;; handleTick
 ;;   increment tick counter
 ;;   spawn meteors (maybe every x ticks) (28 per second so maybe every 28?)
-;;   check if game over (meteor hits)
 ;;   remove old lasers(i.e effects)
 
 (define (handleTick gameState)
@@ -139,8 +138,6 @@
 
 ;   (y - bound) <= x <= (y + bound)
 (define (angleBounds x y bound)
-    ;(or (<= (angNorm (abs (- x y))) bound) (<= (angNorm (abs (- y x))) bound) ))
-    ;(<= (angNorm (- (max (angNorm x) (angNorm y)) (min (angNorm x) (angNorm y)))) bound))
     (<= (angDiff x y) bound))
 
 ; get angle of error for given meteor ( so you don't have to hit perfect center)
@@ -188,7 +185,7 @@
                 SPAWN-DISTANCE 
                 (* (- t b) METEOR-SPEED))]))
 
-; get meteor m x-distance to center
+; get meteor m x-position
 (define (gmeteor-x m t)
     (match m
         [(meteor d b) (+
@@ -197,7 +194,7 @@
                             (cos (* d (/ pi 180))) )
                         (/ WIDTH 2))]))
 
-; get meteor m y-distance to center
+; get meteor m y-position
 (define (gmeteor-y m t)
     (match m
         [(meteor d b) (+ 
